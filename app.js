@@ -48,7 +48,7 @@ function initializeEventListeners() {
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !modalOverlay.hidden) {
+        if (e.key === 'Escape' && modalOverlay.style.display !== 'none') {
             hideModal();
         }
     });
@@ -68,11 +68,12 @@ function updateChildInfoVisibility() {
     const selectedType = document.querySelector('input[name="donationType"]:checked').value;
     const shouldShow = selectedType === 'specific';
     
-    childInfoSection.style.display = shouldShow ? 'block' : 'none';
-    if(shouldShow) {
+    if (shouldShow) {
+        childInfoSection.style.display = 'block';
         setTimeout(() => childInfoSection.classList.add('show'), 10);
     } else {
         childInfoSection.classList.remove('show');
+        childInfoSection.style.display = 'none';
         childNameInput.value = '';
         childCodeInput.value = '';
     }
@@ -91,6 +92,12 @@ function updateGenerateButtonState() {
 
 
 function handleGenerateQR() {
+    // Thêm bước kiểm tra xem thư viện QRCode đã được tải chưa
+    if (typeof QRCode === 'undefined') {
+        showModal('Thư viện tạo mã QR chưa được tải. Vui lòng kiểm tra kết nối mạng và làm mới trang.');
+        return;
+    }
+
     const selectedType = document.querySelector('input[name="donationType"]:checked').value;
     if (selectedType === 'specific') {
         const name = childNameInput.value.trim();
@@ -130,8 +137,9 @@ function crc16(data) {
 function formatTLV(tag, value) {
     if (value === null || value === undefined || value === '') return '';
     const tagStr = tag.toString().padStart(2, '0');
-    const lengthStr = value.length.toString().padStart(2, '0');
-    return `${tagStr}${lengthStr}${value}`;
+    const valueStr = String(value);
+    const lengthStr = valueStr.length.toString().padStart(2, '0');
+    return `${tagStr}${lengthStr}${valueStr}`;
 }
 
 /**
@@ -145,8 +153,9 @@ function formatTLV(tag, value) {
  */
 function generateVietQRContent(options) {
     const { bin, accountNo, info, amount } = options;
+    
     const consumerInfo = formatTLV('00', bin) + formatTLV('01', accountNo);
-    const merchantInfo = formatTLV('00', 'A000000727') + formatTLV('01', consumerInfo);
+    const merchantInfo = formatTLV('00', 'A000000727') + formatTLV('01', consumerInfo) + formatTLV('02', 'QRIBFTTA');
     
     const dataParts = [
         formatTLV('00', '01'),
@@ -184,13 +193,11 @@ function generateAndDisplayQRCode() {
     } else {
         const name = childNameInput.value.trim();
         const code = childCodeInput.value.trim();
-        // Xóa dấu và các ký tự đặc biệt để tương thích
         const sanitizedName = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
         const sanitizedCode = code.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
-        transferContent = `${sanitizedName} ${sanitizedCode}`.trim().substring(0, 50); // Giới hạn độ dài
+        transferContent = `${sanitizedName} ${sanitizedCode}`.trim().substring(0, 50);
     }
 
-    // Tạo nội dung VietQR
     const qrContent = generateVietQRContent({
         bin: ACCOUNT_INFO.bin,
         accountNo: ACCOUNT_INFO.number,
@@ -225,8 +232,10 @@ function generateAndDisplayQRCode() {
 
 function showQRSection() {
     qrSection.style.display = 'block';
-    qrSection.style.opacity = '1';
-    qrSection.style.transform = 'translateY(0)';
+    setTimeout(() => {
+        qrSection.style.opacity = '1';
+        qrSection.style.transform = 'translateY(0)';
+    }, 10);
 }
 
 
@@ -234,9 +243,7 @@ function hideQRSection() {
     qrSection.style.opacity = '0';
     qrSection.style.transform = 'translateY(20px)';
     setTimeout(() => {
-        if (!qrSection.classList.contains('show')) {
-           qrSection.style.display = 'none';
-        }
+        qrSection.style.display = 'none';
     }, 300);
 }
 
@@ -250,7 +257,7 @@ function scrollToQR() {
 
 function showModal(message) {
     modalMessage.textContent = message;
-    modalOverlay.hidden = false;
+    modalOverlay.style.display = 'flex';
     setTimeout(() => {
         modalOverlay.style.opacity = '1';
         const modal = modalOverlay.querySelector('.modal');
@@ -267,6 +274,6 @@ function hideModal() {
     modal.style.transform = 'scale(0.9)';
     modal.style.opacity = '0';
     setTimeout(() => {
-        modalOverlay.hidden = true;
+        modalOverlay.style.display = 'none';
     }, 200);
 }
