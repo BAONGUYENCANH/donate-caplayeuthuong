@@ -145,6 +145,14 @@
 
     <!-- Tải thư viện QR từ file cục bộ TRƯỚC KHI tải app.js -->
     <script src="qrcode.min.js"></script>
+
+    <!-- SCRIPT CHẨN ĐOÁN LỖI: Sẽ hiện thông báo khi tải trang. Sau khi sửa lỗi xong bạn có thể xóa đoạn script này. -->
+    <script>
+        if (typeof QRCode === 'undefined') {
+            alert('[CHẨN ĐOÁN] Lỗi: File qrcode.min.js đã được gọi nhưng không thành công. Hãy thử xóa cache trình duyệt (Ctrl+Shift+R).');
+        }
+    </script>
+    
     <script src="app.js"></script>
 </body>
 </html>
