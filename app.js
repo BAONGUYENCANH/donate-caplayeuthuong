@@ -14,7 +14,7 @@ const modalOK = document.getElementById('modalOK');
 // THÔNG TIN QUAN TRỌNG: Vui lòng xác minh thông tin ngân hàng dưới đây.
 // Ngân hàng Chính sách xã hội (VBSP) hiện không được hỗ trợ bởi VietQR.
 // Bạn cần sử dụng tài khoản tại một ngân hàng được Napas hỗ trợ (ví dụ: BIDV, Vietcombank,...).
-// Mã BIN '970418' của BIDV và số tài khoản '1000001001242424' được dùng làm VÍ DỤ.
+// Mã BIN '970418' của BIDV được dùng làm VÍ DỤ.
 // BẠN PHẢI THAY THẾ BẰNG THÔNG TIN NGÂN HÀNG TRUNG GIAN CHÍNH XÁC.
 const ACCOUNT_INFO = {
     holder: 'Cặp lá yêu thương',
@@ -23,70 +23,25 @@ const ACCOUNT_INFO = {
     bin: '970418' // VÍ DỤ: Mã BIN của BIDV. BẠN PHẢI THAY THẾ!
 };
 
-// Initialize app
+// Khởi tạo trang khi nội dung đã sẵn sàng
 document.addEventListener('DOMContentLoaded', function() {
-    // Kiểm tra thư viện QRCode ngay khi trang load
-    checkQRCodeLibrary();
     initializeEventListeners();
     updateChildInfoVisibility();
     updateGenerateButtonState();
 });
 
-// Kiểm tra thư viện QRCode có sẵn không
-function checkQRCodeLibrary() {
-    if (typeof QRCode === 'undefined') {
-        console.warn('QRCode library chưa được tải. Sẽ thử load lại...');
-        // Thử load backup CDN
-        loadBackupQRLibrary();
-    } else {
-        console.log('QRCode library đã sẵn sàng');
-    }
-}
 
-// Load backup QRCode library nếu CDN chính thất bại
-function loadBackupQRLibrary() {
-    const backupUrls = [
-        'https://unpkg.com/qrcode-js-package@1.0.4/qrcode.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'
-    ];
-    
-    let currentIndex = 0;
-    
-    function tryLoadNext() {
-        if (currentIndex >= backupUrls.length) {
-            console.error('Không thể tải được thư viện QRCode từ bất kỳ CDN nào');
-            return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = backupUrls[currentIndex];
-        script.onload = function() {
-            console.log(`QRCode library đã được tải từ backup CDN: ${backupUrls[currentIndex]}`);
-        };
-        script.onerror = function() {
-            console.warn(`Backup CDN ${currentIndex + 1} thất bại, thử CDN tiếp theo...`);
-            currentIndex++;
-            tryLoadNext();
-        };
-        document.head.appendChild(script);
-    }
-    
-    tryLoadNext();
-}
-
-// Event listeners
 function initializeEventListeners() {
     donationTypeRadios.forEach(radio => {
         radio.addEventListener('change', handleDonationTypeChange);
     });
 
     generateQRBtn.addEventListener('click', handleGenerateQR);
+
     modalClose.addEventListener('click', hideModal);
     modalOK.addEventListener('click', hideModal);
     modalOverlay.addEventListener('click', function(e) {
-        if (e.target === modalOverlay) {
-            hideModal();
-        }
+        if (e.target === modalOverlay) hideModal();
     });
 
     document.addEventListener('keydown', function(e) {
@@ -114,7 +69,12 @@ function updateChildInfoVisibility() {
         setTimeout(() => childInfoSection.classList.add('show'), 10);
     } else {
         childInfoSection.classList.remove('show');
-        childInfoSection.style.display = 'none';
+        // Use a timeout to hide after the animation finishes
+        setTimeout(() => {
+             if(childInfoSection.classList.contains('show') === false) {
+                childInfoSection.style.display = 'none';
+             }
+        }, 300);
         childNameInput.value = '';
         childCodeInput.value = '';
     }
@@ -123,50 +83,27 @@ function updateChildInfoVisibility() {
 function updateGenerateButtonState() {
     const selectedType = document.querySelector('input[name="donationType"]:checked').value;
     let isValid = true;
-    
     if (selectedType === 'specific') {
-        const name = childNameInput.value.trim();
-        const code = childCodeInput.value.trim();
-        isValid = name !== '' && code !== '';
+        isValid = childNameInput.value.trim() !== '' && childCodeInput.value.trim() !== '';
     }
-    
     generateQRBtn.disabled = !isValid;
 }
 
 function handleGenerateQR() {
-    // Kiểm tra thư viện QRCode đã được tải chưa
     if (typeof QRCode === 'undefined') {
-        showModal('Thư viện tạo mã QR chưa được tải. Vui lòng làm mới trang và thử lại.');
-        return;
-    }
-
-    // Kiểm tra Canvas support
-    const canvas = document.getElementById('qrCanvas');
-    if (!canvas || !canvas.getContext) {
-        showModal('Trình duyệt không hỗ trợ Canvas. Vui lòng sử dụng trình duyệt hiện đại.');
+        showModal('Lỗi: Thư viện mã QR không được tải đúng cách. Vui lòng kiểm tra lại file qrcode.min.js.');
         return;
     }
 
     const selectedType = document.querySelector('input[name="donationType"]:checked').value;
-    
-    if (selectedType === 'specific') {
-        const name = childNameInput.value.trim();
-        const code = childCodeInput.value.trim();
-        if (!name || !code) {
-            showModal('Vui lòng nhập đầy đủ thông tin tên bé và mã số để tiếp tục.');
-            return;
-        }
+    if (selectedType === 'specific' && (!childNameInput.value.trim() || !childCodeInput.value.trim())) {
+        showModal('Vui lòng nhập đầy đủ thông tin tên bé và mã số để tiếp tục.');
+        return;
     }
-
+    
     generateAndDisplayQRCode();
 }
 
-// --- Logic tạo mã VietQR ---
-/**
- * Tính toán mã CRC16/CCITT-FALSE cho chuỗi VietQR.
- * @param {string} data Dữ liệu cần tính checksum.
- * @returns {string} Chuỗi checksum 4 ký tự hex.
- */
 function crc16(data) {
     let crc = 0xFFFF;
     for (let i = 0; i < data.length; i++) {
@@ -178,12 +115,6 @@ function crc16(data) {
     return ('0000' + (crc & 0xFFFF).toString(16).toUpperCase()).slice(-4);
 }
 
-/**
- * Định dạng một trường dữ liệu theo chuẩn TLV (Tag-Length-Value).
- * @param {string|number} tag Mã tag.
- * @param {string} value Giá trị.
- * @returns {string} Chuỗi TLV đã định dạng.
- */
 function formatTLV(tag, value) {
     if (value === null || value === undefined || value === '') return '';
     const tagStr = tag.toString().padStart(2, '0');
@@ -192,52 +123,35 @@ function formatTLV(tag, value) {
     return `${tagStr}${lengthStr}${valueStr}`;
 }
 
-/**
- * Tạo nội dung cho mã VietQR theo chuẩn Napas247.
- * @param {object} options Các tùy chọn cho mã QR.
- * @param {string} options.bin Mã BIN của ngân hàng.
- * @param {string} options.accountNo Số tài khoản.
- * @param {string} [options.info] Nội dung chuyển khoản.
- * @param {number} [options.amount] Số tiền.
- * @returns {string} Chuỗi nội dung hoàn chỉnh cho mã QR.
- */
 function generateVietQRContent(options) {
     const { bin, accountNo, info, amount } = options;
     const consumerInfo = formatTLV('00', bin) + formatTLV('01', accountNo);
-    const merchantInfo = formatTLV('00', 'A000000727') + formatTLV('01', consumerInfo) + formatTLV('02', 'QRIBFTTA');
+    // Add service code for VietQR
+    const serviceCode = formatTLV('02', 'QRIBFTTA');
+    const merchantInfo = formatTLV('00', 'A000000727') + formatTLV('01', consumerInfo) + serviceCode;
     
     const dataParts = [
         formatTLV('00', '01'),
         formatTLV('01', amount ? '12' : '11'),
         formatTLV('38', merchantInfo),
-        formatTLV('52', '0000'), // Mã danh mục kinh doanh
-        formatTLV('53', '704'),  // Mã tiền tệ (VND)
+        formatTLV('52', '0000'),
+        formatTLV('53', '704'),
     ];
-    
-    if (amount) {
-        dataParts.push(formatTLV('54', String(amount)));
-    }
-    
+    if (amount) dataParts.push(formatTLV('54', String(amount)));
     dataParts.push(formatTLV('58', 'VN'));
-    
     if (info) {
-        const additionalData = formatTLV('08', info);
-        dataParts.push(formatTLV('62', additionalData));
+         const additionalData = formatTLV('08', info);
+         dataParts.push(formatTLV('62', additionalData));
     }
-    
     const dataToChecksum = dataParts.join('') + '6304';
     const checksum = crc16(dataToChecksum);
     return dataToChecksum + checksum;
 }
-// --- Kết thúc Logic tạo mã VietQR ---
 
-/**
- * Tạo và hiển thị mã QR với cải thiện error handling.
- */
 function generateAndDisplayQRCode() {
     const selectedType = document.querySelector('input[name="donationType"]:checked').value;
     let transferContent = '';
-    
+
     if (selectedType === 'general') {
         transferContent = 'Ung ho CLYT';
     } else {
@@ -255,17 +169,8 @@ function generateAndDisplayQRCode() {
     });
 
     try {
-        const ctx = qrCanvas.getContext('2d');
-        if (!ctx) {
-            throw new Error('Không thể tạo Canvas context');
-        }
-        
-        ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
-        
-        // Thêm timeout để tránh treo browser
-        const qrTimeout = setTimeout(() => {
-            showModal('Tạo mã QR mất quá nhiều thời gian. Vui lòng thử lại.');
-        }, 10000); // 10 giây timeout
+        // Clear previous QR code if any
+        qrCanvas.getContext('2d').clearRect(0, 0, qrCanvas.width, qrCanvas.height);
         
         QRCode.toCanvas(qrCanvas, qrContent, {
             width: 200,
@@ -274,18 +179,14 @@ function generateAndDisplayQRCode() {
             color: { dark: '#15803d', light: '#ffffff' },
             errorCorrectionLevel: 'M'
         }, function(error) {
-            clearTimeout(qrTimeout);
-            
             if (error) {
                 console.error('QR Code generation error:', error);
                 showModal('Có lỗi xảy ra khi tạo mã QR. Vui lòng thử lại.');
             } else {
-                console.log('QR Code đã được tạo thành công');
                 showQRSection();
                 scrollToQR();
             }
         });
-        
     } catch (error) {
         console.error('QR Code generation error:', error);
         showModal('Có lỗi xảy ra khi tạo mã QR. Vui lòng thử lại.');
@@ -304,7 +205,9 @@ function hideQRSection() {
     qrSection.style.opacity = '0';
     qrSection.style.transform = 'translateY(20px)';
     setTimeout(() => {
-        qrSection.style.display = 'none';
+        if(qrSection.style.opacity === '0'){
+            qrSection.style.display = 'none';
+        }
     }, 300);
 }
 
@@ -335,14 +238,3 @@ function hideModal() {
         modalOverlay.style.display = 'none';
     }, 200);
 }
-
-// Debug function cho development
-window.debugQRApp = function() {
-    console.log('=== Debug QR App ===');
-    console.log('QRCode library available:', typeof QRCode !== 'undefined');
-    console.log('Canvas support:', !!document.createElement('canvas').getContext);
-    console.log('Current donation type:', document.querySelector('input[name="donationType"]:checked')?.value);
-    console.log('Child name:', childNameInput?.value);
-    console.log('Child code:', childCodeInput?.value);
-    console.log('===================');
-};
