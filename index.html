@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cặp lá yêu thương - Chuyển khoản ủng hộ</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="leaf-pattern"></div>
+    
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="leaf-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C12 2 22 8.5 12 22C2 8.5 12 2 12 2Z" fill="currentColor"/>
+                        <path d="M12 5C12 5 18 9 12 19" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                        <path d="M12 8C12 8 15 10.5 12 16" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+                    </svg>
+                    <span>Cặp lá yêu thương</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="banner">
+            <div class="container">
+                <div class="banner-content">
+                    <div class="banner-leaves">
+                        <svg class="leaf-small leaf-1" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C12 2 22 8.5 12 22C2 8.5 12 2 12 2Z" fill="currentColor"/>
+                        </svg>
+                        <svg class="leaf-small leaf-2" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C12 2 22 8.5 12 22C2 8.5 12 2 12 2Z" fill="currentColor"/>
+                        </svg>
+                        <svg class="leaf-small leaf-3" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C12 2 22 8.5 12 22C2 8.5 12 2 12 2Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h1 class="banner-title">Cặp lá yêu thương</h1>
+                    <p class="banner-subtitle">Trao cơ hội đi học - Cho cơ hội đổi đời</p>
+                    <p class="banner-description">Quý vị có thể trở thành lá lành của "Cặp lá yêu thương", bằng cách đồng hành hỗ trợ các em nhỏ trong chương trình.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="donation-container">
+                <div class="donation-card card">
+                    <div class="card__body">
+                        <h2 class="donation-title">
+                            <svg class="leaf-icon-small" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2C12 2 22 8.5 12 22C2 8.5 12 2 12 2Z" fill="currentColor"/>
+                            </svg>
+                            Thông tin chuyển khoản
+                        </h2>
+                        
+                        <div class="account-info">
+                            <div class="account-item">
+                                <span class="account-label">Tên tài khoản:</span>
+                                <span class="account-value">Cặp lá yêu thương</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Số tài khoản:</span>
+                                <span class="account-value">1000001001242424</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Ngân hàng:</span>
+                                <span class="account-value">Ngân hàng Chính sách xã hội (VBSP)</span>
+                            </div>
+                            <div class="account-item">
+                                <span class="account-label">Chi nhánh:</span>
+                                <span class="account-value">Sở giao dịch</span>
+                            </div>
+                        </div>
+
+                        <div class="donation-options">
+                            <h3 class="options-title">Chọn loại ủng hộ</h3>
+                            <div class="form-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="donationType" value="general" checked>
+                                    <span class="radio-custom"></span>
+                                    <span class="radio-text">Ủng hộ chung cho quỹ, ghi: <strong>Ung ho CLYT</strong></span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="donationType" value="specific">
+                                    <span class="radio-custom"></span>
+                                    <span class="radio-text">Để hỗ trợ riêng bé "Tên bé - Mã số LCL"</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="child-info" id="childInfo" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" for="childName">Tên bé:</label>
+                                <input type="text" id="childName" class="form-control" placeholder="Nhập tên bé">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="childCode">Mã số LCL:</label>
+                                <input type="text" id="childCode" class="form-control" placeholder="Nhập mã số LCL">
+                            </div>
+                        </div>
+
+                        <button class="btn btn--primary btn--full-width generate-qr-btn" id="generateQR">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <rect x="7" y="7" width="3" height="3"/>
+                                <rect x="14" y="7" width="3" height="3"/>
+                                <rect x="7" y="14" width="3" height="3"/>
+                                <rect x="14" y="14" width="3" height="3"/>
+                            </svg>
+                            <span>Tạo mã QR chuyển khoản</span>
+                        </button>
+
+                        <div class="qr-section" id="qrSection" style="display: none;">
+                            <h3 class="qr-title">Mã QR chuyển khoản</h3>
+                            <div class="qr-container">
+                                <canvas id="qrCanvas"></canvas>
+                            </div>
+                            <p class="qr-instruction">Quét mã QR bằng ứng dụng ngân hàng để chuyển khoản</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal thông báo -->
+    <div class="modal-overlay" id="modalOverlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Thông báo</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--primary" id="modalOK">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
